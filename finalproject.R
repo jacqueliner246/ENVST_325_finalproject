@@ -1,7 +1,7 @@
 ## ENVST 325 Final Project
 ## Author: Jacqueline Reynaga
 ## Date Created: 4-23-26
-## Date Last Updated: 4-23-26
+## Date Last Updated: 4-30-26
 
 
 library(FedData)
@@ -12,6 +12,7 @@ library(ggplot2)
 library(sf)
 library(dplyr)
 library(rgbif)
+library(wk)
 
 
 ## shapefiles
@@ -29,7 +30,13 @@ oswego_shape <- all_counties %>%
   filter(NAME == "Oswego")
 
 ## wkt files
-ca_wkt <- st_as_text(st_geometry(cayuga_shape))
+ca_rounded <- st_geometry(cayuga_shape) %>%
+  st_set_precision(0.00001) %>% 
+  st_as_text()
+ca_wkt <- st_geometry(cayuga_shape) %>%
+  st_set_precision(0.00001) %>% 
+  st_as_text()
+
 co_wkt <- st_as_text(st_geometry(cortland_shape))
 ma_wkt <- st_as_text(st_geometry(madison_shape))
 on_wkt <- st_as_text(st_geometry(onondaga_shape))
@@ -129,9 +136,69 @@ occ <- occ_search(
   basisOfRecord = "OBSERVATION"
 )
 
-key <- name_backbone(name = "Mammalia")
-key$usageKey
-occ_search(taxonKey = key$usageKey, 
-           geom_big = 'bbox',
-           geometry = ca_wkt)
+animalKey <- name_backbone(name = "Animalia")
+plantKey <- name_backbone(name = "Plantae")
+
+
+ca_ccw <- wk_orient(
+  wkt(ca_wkt),
+  direction = wk_counterclockwise()
+)
+
+ca_ccw_shape <- as.character(ca_ccw)[1]
+
+
+occ_download(pred_or(pred("taxonKey", animalKey$usageKey),
+                     pred("taxonKey", plantKey$usageKey)),
+             pred("hasCoordinate", TRUE),
+             pred("year", 2021),
+             pred_within(ca_ccw_shape))
+occ_download(pred_or(pred("taxonKey", animalKey$usageKey),
+                     pred("taxonKey", plantKey$usageKey)),
+             pred("hasCoordinate", TRUE),
+             pred("year", 2021),
+             pred_within(ca_ccw_shape))
+occ_download(pred_or(pred("taxonKey", animalKey$usageKey),
+                     pred("taxonKey", plantKey$usageKey)),
+             pred("hasCoordinate", TRUE),
+             pred("year", 2021),
+             pred_within(ca_ccw_shape))
+occ_download(pred_or(pred("taxonKey", animalKey$usageKey),
+                     pred("taxonKey", plantKey$usageKey)),
+             pred("hasCoordinate", TRUE),
+             pred("year", 2021),
+             pred_within(ca_ccw_shape))
+occ_download(pred_or(pred("taxonKey", animalKey$usageKey),
+                     pred("taxonKey", plantKey$usageKey)),
+             pred("hasCoordinate", TRUE),
+             pred("year", 2021),
+             pred_within(ca_ccw_shape))
+
+ca_species_prep = occ_download_prep(
+  pred_or(pred("taxonKey", animalKey),
+          pred("taxonKey", plantKey)),
+  pred("hasCoordinate", TRUE),
+  pred("hasGeospatialIssue", FALSE),
+  pred_within(ca_ccw_shape))
+out_test = occ_download_queue(.list = list(queries))
+
+nchar((ca_ccw_shape))
+
+
+str(ca_ccw_shape, list.len = nchar((ca_ccw_shape)))
+
+
+
+
+
+
+
+matched_commas <- gregexpr(",", ca_ccw_shape, fixed = TRUE)
+n_commas <- length(matched_commas[[1]])
+
+
+
+
+
+
 
