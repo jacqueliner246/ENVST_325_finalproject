@@ -160,7 +160,6 @@ ca_gbif_data <- occ_download_import(ca_gbif_get)
 write.csv(ca_gbif_data, file = "cayugaGBIF.csv")
 cayuga_GBIF_df <- read.csv("cayugaGBIF.csv")
 
-
 # co_gbif <- occ_download(pred("taxonKey", animalKey$usageKey),
 #              pred("hasCoordinate", TRUE),
 #              pred_or(pred("year", 2000),
