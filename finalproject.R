@@ -102,7 +102,7 @@ cayuga_rastor_df2 <- cayuga_rastor_df %>%
   select(Class = newClass)
 cayuga_rastor_new<- setValues(cayuga_raster2021, as.matrix(cayuga_rastor_df2))
 plot(cayuga_rastor_new)
-plot(cayuga_rastor2021)
+plot(cayuga_raster2021)
 
 # gbif data prep ----------------------------------------------------------
 ## do not run if you already have data
@@ -414,6 +414,3 @@ ggplot() +
   guides(col = guide_legend(title = "Taxonomic families")) +
   # scale_color_manual(values = c("darkorange", "forestgreen")) +
   labs(title = "Occurrences of Anatidae and Cardinalidae in cayuga county")
-
-
-
