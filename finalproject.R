@@ -16,6 +16,7 @@ library(rgbif)
 library(wk)
 library(ggrepel)
 library(tidyverse)
+library(emmeans)
 
 
 # get county areas --------------------------------------------------------
@@ -196,7 +197,7 @@ ggplot(ca_lc_counts, aes(x = "", y = percent, fill = value)) +
   labs(title = "Caygua County") +
   geom_label_repel(data = ca_pie_chart,
                    aes(y = pos, label = paste0(paste0(value," "), paste0(percent*100, "%")), fill = NULL),
-                   size = 4.5, nudge_x = 1, show.legend = FALSE) +
+                   size = 2, nudge_x = 1, show.legend = FALSE) +
   theme(panel.background = element_blank(),
         title = element_text(hjust = 1.5),
         legend.position = "none", 
@@ -221,7 +222,7 @@ ggplot(co_lc_counts, aes(x = "", y = percent, fill = value)) +
   labs(title = "Cortland County") +
   geom_label_repel(data = co_pie_chart,
                    aes(y = pos, label = paste0(paste0(value," "), paste0(percent*100, "%")), fill = NULL),
-                   size = 4.5, nudge_x = 1, show.legend = FALSE) +
+                   size = 2, nudge_x = 1, show.legend = FALSE) +
   theme(panel.background = element_blank(),
         title = element_text(hjust = 1.5),
         legend.position = "none", 
@@ -246,7 +247,7 @@ ggplot(ma_lc_counts, aes(x = "", y = percent, fill = value)) +
   labs(title = "Madison County") +
   geom_label_repel(data = ma_pie_chart,
                    aes(y = pos, label = paste0(paste0(value," "), paste0(percent*100, "%")), fill = NULL),
-                   size = 4.5, nudge_x = 1, show.legend = FALSE) +
+                   size = 2, nudge_x = 1, show.legend = FALSE) +
   theme(panel.background = element_blank(),
         title = element_text(hjust = 1.5),
         legend.position = "none",
@@ -271,7 +272,7 @@ ggplot(on_lc_counts, aes(x = "", y = percent, fill = value)) +
   labs(title = "Onondaga County") +
   geom_label_repel(data = on_pie_chart,
                    aes(y = pos, label = paste0(paste0(value," "), paste0(percent*100, "%")), fill = NULL),
-                   size = 4.5, nudge_x = 1, show.legend = FALSE) +
+                   size = 2, nudge_x = 1, show.legend = FALSE) +
   theme(panel.background = element_blank(),
         title = element_text(hjust = 1.5),
         legend.position = "none",
@@ -296,7 +297,7 @@ ggplot(os_lc_counts, aes(x = "", y = percent, fill = value)) +
   labs(title = "Oswego County") +
   geom_label_repel(data = os_pie_chart,
                    aes(y = pos, label = paste0(paste0(value," "), paste0(percent*100, "%")), fill = NULL),
-                   size = 4.5, nudge_x = 1, show.legend = FALSE) +
+                   size = 2, nudge_x = 1, show.legend = FALSE) +
   theme(panel.background = element_blank(),
         title = element_text(hjust = 1.5),
         legend.position = "none",
@@ -676,6 +677,8 @@ county_fam_abundance_lc <- merge(county_family_abundance, county_lc)
 family.model <- lm(data = county_fam_abundance_lc, difference~first+second) # best fit with only top 2
 summary(family.model)
 
+emmeans(family.model, ~first+second)
+
 ## overall abundance change per county
 county_abundance_change <- county_fam_abundance_lc %>% 
   group_by(county, first, second, third) %>%
@@ -684,6 +687,18 @@ county_abundance_change <- county_fam_abundance_lc %>%
 ### create model to see how overall abundance changes are influenced by landcover
 overall.model <- lm(data = county_abundance_change, abundance_change~first+second) # best fit with only top 2
 summary(overall.model)
+
+emmeans(overall.model, ~first+second)
+
+ggplot(county_abundance_change, aes(x=first, y=second, fill = county)) +
+  geom_bar(position=position_dodge(), stat="identity", color = 'black') +
+  scale_fill_manual(values = c('#004965','#952611', '#004965', '#004965', '#004965'))+
+  labs(x = 'County', y = "Change in total number of species")+
+  geom_hline(aes(yintercept = 0))+
+  theme_classic()+
+  theme(legend.position = 'none',
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"))
 
 ## species number changes
 ca_species <- data.frame(species2014 = length(unique(cayuga_GBIF_sf_2014$species)),
@@ -715,12 +730,15 @@ ggplot(species_count, aes(x=reorder(county, -species_change), y=species_change, 
   labs(x = 'County', y = "Change in total number of species")+
   geom_hline(aes(yintercept = 0))+
   theme_classic()+
-  theme(legend.position = 'none')
+  theme(legend.position = 'none',
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"))
 
 ### create model to see how overall abundance changes are influenced by landcover
 species.model <- lm(data = species_count, species_change~first+second) # best fit with only top 2
 summary(species.model)
 
+emmeans(species.model, ~first+second)
 
 ## interesting case: cayuga family
 cayuga_biggest_change <- cayuga_family_abundance %>%
@@ -737,3 +755,22 @@ ggplot() +
   labs(title = "Occurrences of Anatidae in Cayuga County\nin 2014 and 2024", col = "Year") 
   theme(legend.position = "none")
   
+  
+## looking at difference in observation count between years
+
+obs_data <- data.frame('county' = rep(c('cayuga', 'cortland', 'madison', 'onondaga', 'oswego'), 2),
+                       'obs' = c(nrow(cayuga_GBIF_sf_2014), nrow(cortland_GBIF_sf_2014), 
+                                     nrow(madison_GBIF_sf_2014),
+                                     nrow(onondaga_GBIF_sf_2014), nrow(oswego_GBIF_sf_2014),
+                                 nrow(cayuga_GBIF_sf_2024), nrow(cortland_GBIF_sf_2024), 
+                                 nrow(madison_GBIF_sf_2024),
+                                 nrow(onondaga_GBIF_sf_2024), nrow(oswego_GBIF_sf_2024)),
+                       'year' = c(rep(2014, 5), rep(2024, 5)))
+
+ggplot(obs_data, aes(x = county , y= obs, fill = as.factor(year))) +
+  geom_bar(position="dodge", stat = "identity") +
+  theme_classic() +
+  labs(x = "County", y = "Number of Observations", fill = "Year") +
+  scale_fill_manual(values = c("#d5d602", "#ca436f")) +
+  theme(axis.text=element_text(size=14),
+        axis.title=element_text(size=16,face="bold"))
